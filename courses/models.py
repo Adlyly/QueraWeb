@@ -1,3 +1,24 @@
+from userprofile.models import Participant,Holder,Admin
 from django.db import models
 
-# Create your models here.
+class Course(models.Model):
+    title = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    description = models.TextField(blank=True)
+    participants = models.ManyToManyField(Participant, related_name="courses")
+    holders = models.ManyToManyField(Holder, related_name="courses")
+    admins = models.ManyToManyField(Admin, related_name="courses")
+
+class Submission(models.Model):
+    SITUATION_CORRECT = 'correct'
+    SITUATION_WRONG = 'wrong'
+    SITUATION_CHOICES = [
+        (SITUATION_CORRECT, 'correct'),
+        (SITUATION_WRONG, 'wrong')
+    ]
+    situation = models.CharField(
+        max_length=1, choices=SITUATION_CHOICES)
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name="submissions")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions")
