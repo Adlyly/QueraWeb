@@ -20,7 +20,7 @@ class Submission(models.Model):
         (SITUATION_WRONG, 'wrong')
     ]
     situation = models.CharField(
-        max_length=1, choices=SITUATION_CHOICES)
+        max_length=10, choices=SITUATION_CHOICES)
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name="submissions")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="submissions")

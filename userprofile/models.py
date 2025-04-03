@@ -11,7 +11,7 @@ class Language(models.Model):
         (LEVEL_SENIOR, 'senior'),
     ]
     level = models.CharField(
-        max_length=1, choices=LEVEL_CHOICES, default=LEVEL_JUNIOR)
+        max_length=20, choices=LEVEL_CHOICES, default=LEVEL_JUNIOR)
     name = models.CharField(max_length=50, unique=True)
 #     LANGUAGE_C = 'C'
 #     LANGUAGE_CPP = 'CPP'
@@ -31,13 +31,13 @@ class Language(models.Model):
 #     langu = models.CharField(
 #         max_length=1, choices=LANGUAGE_CHOICES, default=LANGUAGE_C)
 
-class UserProfile():
+class UserProfile(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     phone = models.CharField(max_length=50)
     university = models.CharField(max_length=100)
     major = models.CharField(max_length=50)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    known_languages = models.ManyToManyField(Language, blank=True, on_delete=models.SET_NULL)
+    known_languages = models.ManyToManyField(Language, blank=True)
 
 class Participant(UserProfile):
     pass
