@@ -80,8 +80,12 @@ WSGI_APPLICATION = 'QueraWeb.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'QueraWeb',
+        'HOST' : 'localhost',
+        'USER' : 'root',
+        'PASSWORD' : 'Yalda*1383'
+
     }
 }
 
