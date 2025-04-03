@@ -1,4 +1,5 @@
 from userprofile.models import Participant,Holder,Admin
+from questionsbank.models import Question
 from django.db import models
 
 class Course(models.Model):
@@ -22,3 +23,4 @@ class Submission(models.Model):
         max_length=1, choices=SITUATION_CHOICES)
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name="submissions")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="submissions")
