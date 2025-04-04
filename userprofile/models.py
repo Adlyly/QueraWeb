@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from datetime import datetime, timezone
 
 class Language(models.Model):
     LEVEL_JUNIOR = 'junior'
@@ -13,23 +14,7 @@ class Language(models.Model):
     level = models.CharField(
         max_length=20, choices=LEVEL_CHOICES, default=LEVEL_JUNIOR)
     name = models.CharField(max_length=50, unique=True)
-#     LANGUAGE_C = 'C'
-#     LANGUAGE_CPP = 'CPP'
-#     LANGUAGE_PYTHON = 'python'
-#     LANGUAGE_Java = 'java'
-#     LANGUAGE_CSharp = 'C#'
-#     LANGUAGE_DJANGO = 'django'
 
-#     LANGUAGE_CHOICES = [
-#         (LANGUAGE_C, 'C'),
-#         (LANGUAGE_CPP, 'CPP'),
-#         (LANGUAGE_PYTHON, 'python'),
-#         (LANGUAGE_Java, 'java'),
-#         (LANGUAGE_CSharp, 'C#'),
-#         (LANGUAGE_DJANGO, 'django'),
-#     ]
-#     langu = models.CharField(
-#         max_length=1, choices=LANGUAGE_CHOICES, default=LANGUAGE_C)
 
 class UserProfile(models.Model):
     birth_date = models.DateField(null=True, blank=True)
@@ -47,3 +32,15 @@ class Holder(UserProfile):
 
 class Admin(UserProfile):
     pass
+
+class UserToken(models.Model):
+    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='token')
+    token = models.CharField(max_length=100, unique=True)
+    expiry = models.DateTimeField()
+
+    def is_expired(self):
+        return timezone.now() > self.expiry
+
+    def refresh(self, remember_me=False):
+        self.expiry = timezone.now() + datetime.timedelta(days=7 if remember_me else 1)
+        self.save()
