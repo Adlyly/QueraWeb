@@ -74,9 +74,6 @@ def user_dashboard(request):
 
     if not user:
         return Response({"error": "Unauthorized"}, status=401)
-    
-    if user.is_staff:
-        return Response({"error": "Forbidden"}, status=403)
 
     return Response({"message": f"Hello User {user.username}!"})
 
