@@ -1,17 +1,15 @@
-from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from .models import UserToken, UserProfile
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = UserProfile
         fields = ['id', 'username', 'email']
 
 
 class UserTokenSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-
     class Meta:
         model = UserToken
         fields = ['user', 'token', 'expiry']
