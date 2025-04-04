@@ -9,12 +9,15 @@ def create_token(user, remember_me=False):
     UserToken.objects.create(user=user, token=token, expiry=expiry)
     return token, expiry
 
-def validate_token(token):
+def validate_token(token, remember_me=False):
     try:
         user_token = UserToken.objects.get(token=token)
         if user_token.is_expired():
-            user_token.delete()
-            return None
+            if remember_me:
+                user_token.refresh(remember_me=True)
+            else:
+                user_token.delete()
+                return None
         return user_token.user
     except UserToken.DoesNotExist:
         return None
