@@ -2,6 +2,8 @@ from django.contrib.auth.hashers import check_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
+
+from core.models import User
 from .serializers import UserTokenSerializer, UserSerializer, RegisterSerializer
 from .models import UserToken, UserProfile
 from .utils import create_token, validate_token
@@ -15,26 +17,23 @@ def login_view(request):
     remember_me = request.data.get("remember_me", False)
 
     try:
-        user = UserProfile.objects.get(username=username)
-    except UserProfile.DoesNotExist:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
         return Response({"error": "Invalid username"}, status=status.HTTP_401_UNAUTHORIZED)
 
     if not check_password(password, user.password):
         return Response({"error": "Invalid password"}, status=status.HTTP_401_UNAUTHORIZED)
     
     token, expiry = create_token(user, remember_me)
+    userprofile = UserProfile.objects.filter(user=user)
     token_instance = UserTokenSerializer(data={
-        "user": user.id,
+        "user": userprofile,
         "token": token,
         "expiry": expiry
     })
     if token_instance.is_valid():
         token_instance.save()
-        return Response({
-            "user": UserSerializer(user).data,
-            "token": token,
-            "expiry": expiry
-        }, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
     else:
         return Response(token_instance.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -45,6 +44,9 @@ def logout_view(request):
 
     if not token:
         return Response({"error": "Token not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if token.startswith("Bearer "):
+        token = token[7:]
 
     deleted, _ = UserToken.objects.filter(token=token).delete()
     if deleted:
@@ -82,10 +84,6 @@ def register_view(request):
     serializer = RegisterSerializer(data=request.data) 
     if serializer.is_valid():
         user = serializer.save()
-
-        return Response({
-            "message": "User registered successfully.",
-            "user": UserSerializer(user).data
-        }, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
