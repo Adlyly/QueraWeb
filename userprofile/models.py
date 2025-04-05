@@ -1,4 +1,4 @@
-from django.conf import settings
+from core.models import User
 from django.db import models
 from datetime import datetime, timezone
 
@@ -21,8 +21,9 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=50)
     university = models.CharField(max_length=100)
     major = models.CharField(max_length=50)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user')
     known_languages = models.ManyToManyField(Language, blank=True)
+
 
 class Participant(UserProfile):
     pass
