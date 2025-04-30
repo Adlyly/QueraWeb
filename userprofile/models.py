@@ -25,7 +25,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user')
     known_languages = models.ManyToManyField(Language, blank=True)
 
-
 class Participant(UserProfile):
     pass
 
