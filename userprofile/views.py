@@ -33,7 +33,12 @@ def login_view(request):
     token_obj = UserToken.objects.get(user=userprofile)
     serialized = UserTokenSerializer(token_obj)
 
-    return Response(serialized.data, status=status.HTTP_200_OK)
+    dashboard_url = "/admin-dashboard/" if user.is_staff else "/user-dashboard/"
+
+    return Response({
+        "token_data": serialized.data,
+        "redirect_url": dashboard_url
+    }, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
