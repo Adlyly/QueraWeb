@@ -24,18 +24,16 @@ def login_view(request):
     if not check_password(password, user.password):
         return Response({"error": "Invalid password"}, status=status.HTTP_401_UNAUTHORIZED)
     
-    token, expiry = create_token(user, remember_me)
-    userprofile = UserProfile.objects.filter(user=user)
-    token_instance = UserTokenSerializer(data={
-        "user": userprofile,
-        "token": token,
-        "expiry": expiry
-    })
-    if token_instance.is_valid():
-        token_instance.save()
-        return Response(status=status.HTTP_200_OK)
-    else:
-        return Response(token_instance.errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        token, expiry = create_token(user, remember_me)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    userprofile = UserProfile.objects.get(user=user)
+    token_obj = UserToken.objects.get(user=userprofile)
+    serialized = UserTokenSerializer(token_obj)
+
+    return Response(serialized.data, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
@@ -45,7 +43,7 @@ def logout_view(request):
     if not token:
         return Response({"error": "Token not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if token.startswith("Bearer "):
+    if token.lower().startswith("bearer "):
         token = token[7:]
 
     deleted, _ = UserToken.objects.filter(token=token).delete()
