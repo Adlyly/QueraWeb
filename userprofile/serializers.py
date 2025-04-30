@@ -17,11 +17,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ['user']
 
 class UserTokenSerializer(serializers.ModelSerializer):
-    
-    userprofile = UserProfileSerializer(read_only=True)
+    user = UserProfileSerializer(read_only=True)
+
     class Meta:
         model = UserToken
-        fields = ['userprofile', 'token', 'expiry']
+        fields = ['user', 'token', 'expiry']
+
 
 
 class RegisterSerializer(serializers.ModelSerializer):

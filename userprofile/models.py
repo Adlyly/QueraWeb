@@ -1,6 +1,7 @@
 from core.models import User
 from django.db import models
-from datetime import datetime, timezone
+from django.utils import timezone
+import datetime
 
 class Language(models.Model):
     LEVEL_JUNIOR = 'junior'
