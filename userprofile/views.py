@@ -9,6 +9,10 @@ from .models import UserToken, UserProfile
 from .utils import create_token, validate_token
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsAdmin, IsAuthenticatedUser 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from userprofile.utils import validate_token
+
 
 @api_view(["POST"])
 def login_view(request):
@@ -58,27 +62,35 @@ def logout_view(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAdmin]) 
 def admin_dashboard(request):
     token = request.headers.get("Authorization")
-    user = validate_token(token)
+    if token and token.lower().startswith("bearer "):
+        token = token[7:]
 
-    if not user:
-        return Response({"error": "Unauthorized"}, status=401)
+    user_profile = validate_token(token)
     
+    if not user_profile:
+        return Response({"error": "Unauthorized"}, status=401)
+
+    user = user_profile.user  # 👈 گرفتن User اصلی
+
     if not user.is_staff:
         return Response({"error": "Forbidden"}, status=403)
 
     return Response({"message": f"Hello Admin {user.username}!"})
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAuthenticatedUser]) 
 def user_dashboard(request):
     token = request.headers.get("Authorization")
-    user = validate_token(token)
+    if token and token.lower().startswith("bearer "):
+        token = token[7:]
 
-    if not user:
+    user_profile = validate_token(token)
+
+    if not user_profile:
         return Response({"error": "Unauthorized"}, status=401)
+
+    user = user_profile.user  # 👈 گرفتن User اصلی
 
     return Response({"message": f"Hello User {user.username}!"})
 
