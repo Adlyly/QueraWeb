@@ -1,4 +1,3 @@
-from core.models import User
 from django.db import models
 from django.utils import timezone
 import datetime
@@ -25,7 +24,7 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=50)
     university = models.CharField(max_length=100)
     major = models.CharField(max_length=50)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user')
+    user = models.OneToOneField('core.User', on_delete=models.CASCADE, related_name='user')
     known_languages = models.ManyToManyField(Language, blank=True)
 
     def __str__(self):

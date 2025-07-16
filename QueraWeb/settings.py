@@ -42,8 +42,6 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'djoser',
     'core',
-    'courses',
-    'questionsbank',
     'userprofile',
 ]
 

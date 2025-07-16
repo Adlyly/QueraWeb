@@ -4,8 +4,13 @@ from rest_framework import serializers
 from .models import UserToken, UserProfile
 from core.models import User
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+
 class UserProfileSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(read_only=True)
+    user = UserSerializer(read_only=True)
     class Meta:
         model = UserProfile
-        fields = ['id', 'user_id', 'birth_date', 'phone', 'university', 'major', 'known_languages']
+        fields = ['id', 'user', 'birth_date', 'phone', 'university', 'major', 'known_languages']
