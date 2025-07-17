@@ -3,6 +3,8 @@ from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 
+from userprofile.models import UserProfile
+
 class UserCreateSerializer(BaseUserCreateSerializer):
     class Meta(BaseUserCreateSerializer.Meta):
         fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name']
@@ -25,9 +27,25 @@ class QuestionCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['author']
 
 class CourseSerializer(serializers.ModelSerializer):
-    holders = UserSerializer(read_only=True, many=True)
-    participants = UserSerializer(read_only=True, many=True)
-    questions = QuestionSerializer(read_only=True, many=True)
+    participants = UserSerializer(many=True, read_only=True)
+    holders = UserSerializer(many=True, read_only=True)
+    questions = QuestionSerializer(many=True, read_only=True)
+
     class Meta:
         model = Course
-        fields = ['title', 'created_at', 'start_date', 'end_date', 'holders', 'participants', 'questions']
+        fields = '__all__'
+
+class CourseCreateUpdateSerializer(serializers.ModelSerializer):
+    participants = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=UserProfile.objects.filter(role='participant'), required=False
+    )
+    holders = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=UserProfile.objects.filter(role='holder')
+    )
+    questions = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Question.objects.all(), required=False
+    )
+
+    class Meta:
+        model = Course
+        fields = '__all__'

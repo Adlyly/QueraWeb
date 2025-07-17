@@ -2,8 +2,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from core.models import Question
-from core.serializers import QuestionCreateSerializer, QuestionSerializer
+from core.models import Course, Question
+from core.permission import IsHolderOfCourseOrReadOnly, IsHolderOrReadOnly
+from core.serializers import CourseCreateUpdateSerializer, CourseSerializer, QuestionCreateSerializer, QuestionSerializer
 from userprofile.models import UserProfile
 
 class QuestionViewSet(ModelViewSet):
@@ -30,3 +31,12 @@ class QuestionViewSet(ModelViewSet):
         if instance.author != user_profile:
             raise PermissionDenied("You can only delete your own questions.")
         instance.delete()
+
+class CourseViewSet(ModelViewSet):
+    queryset = Course.objects.all()
+    permission_classes = [IsAuthenticated, IsHolderOfCourseOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return CourseCreateUpdateSerializer
+        return CourseSerializer
