@@ -3,7 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from core.models import Course, Question
-from core.permission import IsHolderOfCourseOrReadOnly, IsHolderOrReadOnly
+from core.permission import IsHolderOfCourseOrReadOnly
 from core.serializers import CourseCreateUpdateSerializer, CourseSerializer, QuestionCreateSerializer, QuestionSerializer
 from userprofile.models import UserProfile
 
