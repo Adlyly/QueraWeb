@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from userprofile.models import Admin, Holder, Participant, UserProfile
+from userprofile.models import UserProfile
 from django.db import models
 
 class User(AbstractUser):
@@ -11,9 +11,9 @@ class Course(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     description = models.TextField(blank=True)
-    participants = models.ManyToManyField(Participant, related_name="courses")
-    holders = models.ManyToManyField(Holder, related_name="courses")
-    admins = models.ManyToManyField(Admin, related_name="courses")
+    participants = models.ManyToManyField(UserProfile, related_name="participant_courses", limit_choices_to={'role': 'participant'})
+    holders = models.ManyToManyField(UserProfile, related_name="holder_courses", limit_choices_to={'role': 'holder'})
+    admins = models.ManyToManyField(UserProfile, related_name="admin_courses", limit_choices_to={'role': 'admin'})
 
 class Question(models.Model):
     author = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
@@ -31,8 +31,12 @@ class Submission(models.Model):
         (SITUATION_CORRECT, 'correct'),
         (SITUATION_WRONG, 'wrong')
     ]
-    situation = models.CharField(
-        max_length=10, choices=SITUATION_CHOICES)
-    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name="submissions")
+    situation = models.CharField(max_length=10, choices=SITUATION_CHOICES)
+    participant = models.ForeignKey(
+        UserProfile, 
+        on_delete=models.CASCADE, 
+        related_name="submissions",
+        limit_choices_to={'role': 'participant'}
+    )
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="submissions")
