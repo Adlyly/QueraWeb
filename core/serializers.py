@@ -13,8 +13,15 @@ class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name']
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'role', 'username']
+
 class QuestionSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = Question
@@ -27,8 +34,8 @@ class QuestionCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['author']
 
 class CourseSerializer(serializers.ModelSerializer):
-    participants = UserSerializer(many=True, read_only=True)
-    holders = UserSerializer(many=True, read_only=True)
+    participants = UserProfileSerializer(many=True, read_only=True)
+    holders = UserProfileSerializer(many=True, read_only=True)
     questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:

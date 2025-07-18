@@ -20,8 +20,8 @@ class Course(models.Model):
     end_date = models.DateTimeField()
     description = models.TextField(blank=True)
     participants = models.ManyToManyField(UserProfile, related_name="participant_courses", limit_choices_to={'role': 'participant'}, blank=True )
-    holders = models.ManyToManyField(UserProfile, related_name="holder_courses", limit_choices_to={'role': 'holder'})
-    questions = models.ManyToManyField(Question, related_name="questions", blank=True)
+    holders = models.ManyToManyField(UserProfile, related_name="holder_courses", limit_choices_to={'role': 'holder'}, blank=True)
+    questions = models.ManyToManyField(Question, related_name="courses", blank=True)
 
     def __str__(self):
         return self.title

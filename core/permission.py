@@ -1,19 +1,27 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework import permissions
+from userprofile.models import UserProfile
 
-class IsHolderOfCourseOrReadOnly(BasePermission):
+class IsHolderOfCourseOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return request.user.is_authenticated
-        return (
-            request.user.is_authenticated and 
-            hasattr(request.user, 'userprofile') and 
-            request.user.userprofile.role == 'holder'
-        )
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        if request.method == 'POST':
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+            except UserProfile.DoesNotExist:
+                return False
+            return user_profile.role == 'holder'
+        return True
 
     def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        user_profile = getattr(request.user, 'userprofile', None)
-        if not user_profile or user_profile.role != 'holder':
+        user = request.user
+        if not user or not user.is_authenticated:
             return False
-        return obj.holders.filter(id=user_profile.id).exists()
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+        except UserProfile.DoesNotExist:
+            return False
+        return user_profile in obj.holders.all()
