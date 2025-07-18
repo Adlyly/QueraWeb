@@ -20,13 +20,14 @@ class Course(models.Model):
     end_date = models.DateTimeField()
     description = models.TextField(blank=True)
     participants = models.ManyToManyField(UserProfile, related_name="participant_courses", limit_choices_to={'role': 'participant'}, blank=True )
-    holders = models.ManyToManyField(UserProfile, related_name="holder_courses", limit_choices_to={'role': 'holder'}, blank=True)
+    holders = models.ManyToManyField(UserProfile, related_name="holder_courses", limit_choices_to={'role': 'holder'})
     questions = models.ManyToManyField(Question, related_name="courses", blank=True)
 
     def __str__(self):
         return self.title
 
 class TestCase(models.Model):
+    author = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="test_cases")
     input = models.TextField()
     output = models.TextField()
@@ -38,7 +39,7 @@ class Submission(models.Model):
         (SITUATION_CORRECT, 'correct'),
         (SITUATION_WRONG, 'wrong')
     ]
-    situation = models.CharField(max_length=10, choices=SITUATION_CHOICES)
+    situation = models.CharField(max_length=10, choices=SITUATION_CHOICES, null=True)
     participant = models.ForeignKey(
         UserProfile, 
         on_delete=models.CASCADE, 
