@@ -13,4 +13,4 @@ class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = UserProfile
-        fields = ['id', 'user', 'role', 'birth_date', 'phone', 'university', 'major', 'known_languages']
+        fields = ['id', 'user', 'birth_date', 'phone', 'university', 'major', 'known_languages']

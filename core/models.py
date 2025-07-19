@@ -19,8 +19,8 @@ class Course(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     description = models.TextField(blank=True)
-    participants = models.ManyToManyField(UserProfile, related_name="participant_courses", limit_choices_to={'role': 'participant'}, blank=True )
-    holders = models.ManyToManyField(UserProfile, related_name="holder_courses", limit_choices_to={'role': 'holder'})
+    participants = models.ManyToManyField(UserProfile, related_name="participant_courses", blank=True )
+    holders = models.ManyToManyField(UserProfile, related_name="holder_courses")
     questions = models.ManyToManyField(Question, related_name="courses", blank=True)
 
     def __str__(self):
@@ -43,8 +43,7 @@ class Submission(models.Model):
     participant = models.ForeignKey(
         UserProfile, 
         on_delete=models.CASCADE, 
-        related_name="submissions",
-        limit_choices_to={'role': 'participant'}
+        related_name="submissions"
     )
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="submissions")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="submissions")
