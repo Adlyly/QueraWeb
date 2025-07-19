@@ -117,6 +117,10 @@ class SubmissionViewSet(ModelViewSet):
         user_profile = UserProfile.objects.get(user=self.request.user)
         instance = serializer.instance
         old_course = instance.course
+
+        is_participant = instance.participant == user_profile
+        is_holder = user_profile in old_course.holders.all() or self.request.user.is_superuser
+
         new_course_id = self.request.data.get("course", None)
         if new_course_id:
             try:
@@ -129,14 +133,22 @@ class SubmissionViewSet(ModelViewSet):
                 and user_profile not in new_course.holders.all()
                 and not self.request.user.is_superuser
             ):
-                raise PermissionDenied("Invalid course ID.")
+                raise PermissionDenied("You cannot assign to this course.")
+        data = self.request.data.copy()
 
-        is_holder = user_profile in old_course.holders.all() or self.request.user.is_superuser
-        if not is_holder and 'situation' in self.request.data:
-            data = self.request.data.copy()
-            data.pop('situation', None)
+        if is_participant:
+            data.pop('situation', None)  
             serializer = self.get_serializer(instance, data=data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-        else:
+
+        elif is_holder:
+            allowed_fields = ['situation']
+            data = {k: v for k, v in data.items() if k in allowed_fields}
+            serializer = self.get_serializer(instance, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
+
+        else:
+            raise PermissionDenied("You don't have permission to edit this submission.")
+
