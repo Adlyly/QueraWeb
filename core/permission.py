@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS  
+from core.models import Course
 from userprofile.models import UserProfile
 
 class IsHolderOrParticipantPermission(BasePermission):
@@ -19,26 +20,32 @@ class IsHolderOrParticipantPermission(BasePermission):
 
 
 
-    
-# class SubmissionAccessPermission(BasePermission):
-#     def has_object_permission(self, request, view, obj):
-#         user_profile = request.user.user
-#         is_owner = obj.participant == user_profile
-#         is_holder = obj.course.holders.filter(id=user_profile.id).exists()
+class IsOwnerOrCourseHolder(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        user_profile = UserProfile.objects.get(user=request.user)
+        course_id = request.data.get('course')
+        course = Course.objects.get(id=course_id)
+        is_participant = obj.participant == user_profile
+        is_holder = user_profile in course.holders.all()
 
-#         if request.method in SAFE_METHODS:
-#             return is_owner or is_holder
+        if request.method in ['PUT', 'PATCH', 'DELETE']:
+            return is_participant or is_holder
+        return True
 
-#         if request.method in ['PUT', 'PATCH'] and 'situation' in request.data and not is_owner:
-#             return True
+class CanCreateSubmission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method != ['POST', 'PUT']:
+            return True
 
-#         return is_owner
+        user_profile = UserProfile.objects.get(user=request.user)
+        course_id = request.data.get('course')
 
-# class SubmissionSituationEditPermission(BasePermission):
-#     def has_object_permission(self, request, view, obj):
-#         user_profile = request.user.user
-#         if request.method in ['PUT', 'PATCH']:
-#             if 'situation' in request.data:
-#                 return obj.course.holders.filter(id=user_profile.id).exists()
-#         return True
-    
+        if not course_id:
+            return False
+
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return False
+
+        return user_profile in course.participants.all() or user_profile in course.holders.all() or request.user.is_superuser

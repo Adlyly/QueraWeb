@@ -1,11 +1,12 @@
+from django.forms import ValidationError
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from core.models import Course, Question, Submission, TestCase
-from core.permission import IsHolderOrParticipantPermission
-from core.serializers import CourseCreateUpdateSerializer, CourseSerializer, QuestionCreateSerializer, QuestionSerializer, TestCaseSerializer, TestCasesCreateSerializer
+from core.permission import CanCreateSubmission, IsHolderOrParticipantPermission, IsOwnerOrCourseHolder
+from core.serializers import CourseCreateUpdateSerializer, CourseSerializer, QuestionCreateSerializer, QuestionSerializer, SubmissionSerializer, TestCaseSerializer, TestCasesCreateSerializer
 from userprofile.models import UserProfile
 
 class QuestionViewSet(ModelViewSet):
@@ -85,15 +86,54 @@ class TestCaseViewSet(ModelViewSet):
             raise PermissionDenied("You can only delete your own testcase.")
         instance.delete()
 
-# class SubmissionViewSet(ModelViewSet):
-#     queryset = Submission.objects.all()
-#     serializer_class = SubmissionSerializer
-#     permission_classes = [IsAuthenticated, SubmissionAccessPermission, SubmissionSituationEditPermission]
+class SubmissionViewSet(ModelViewSet):
+    serializer_class = SubmissionSerializer
+    permission_classes = [IsAuthenticated, CanCreateSubmission, IsOwnerOrCourseHolder]
 
-#     def perform_create(self, serializer):
-#         user_profile = self.request.user.user
+    def get_queryset(self):
+        user_profile = UserProfile.objects.get(user=self.request.user)
+        course_id = self.request.query_params.get("course_id") or self.request.data.get("course")
 
-#         if user_profile.role != UserProfile.ROLE_PARTICIPANT:
-#             raise PermissionDenied("Only participants can create submissions.")
+        if course_id:
+            try:
+                course = Course.objects.get(id=course_id)
+            except Course.DoesNotExist:
+                return Submission.objects.none()
 
-#         serializer.save(participant=user_profile)
+        courses_as_holder = Course.objects.filter(holders=user_profile)
+        courses_as_participant = Course.objects.filter(participants=user_profile)
+
+        return Submission.objects.filter(
+            Q(course__in=courses_as_holder) | Q(course__in=courses_as_participant, participant=user_profile)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        serializer.save(participant=UserProfile.objects.get(user=self.request.user))
+
+    def perform_update(self, serializer):
+        user_profile = UserProfile.objects.get(user=self.request.user)
+        instance = serializer.instance
+        old_course = instance.course
+        new_course_id = self.request.data.get("course", None)
+        if new_course_id:
+            try:
+                new_course = Course.objects.get(id=new_course_id)
+            except Course.DoesNotExist:
+                raise PermissionDenied("Invalid course ID.")
+
+            if (
+                user_profile not in new_course.participants.all()
+                and user_profile not in new_course.holders.all()
+                and not self.request.user.is_superuser
+            ):
+                raise PermissionDenied("Invalid course ID.")
+
+        is_holder = user_profile in old_course.holders.all()
+        if not is_holder and 'situation' in self.request.data:
+            data = self.request.data.copy()
+            data.pop('situation', None)
+            serializer = self.get_serializer(instance, data=data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        else:
+            serializer.save()

@@ -2,7 +2,6 @@ from core.models import Course, Question, Submission, TestCase
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
-
 from userprofile.models import UserProfile
 
 class UserCreateSerializer(BaseUserCreateSerializer):
@@ -77,46 +76,28 @@ class TestCasesCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'input', 'output', 'question']
         read_only_fields = ['author']
 
-# class SubmissionSerializer(serializers.ModelSerializer):
-#     participant = serializers.ReadOnlyField(source='participant.user.username')
-#     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-#     question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())
+class SubmissionSerializer(serializers.ModelSerializer):
+    participant = serializers.ReadOnlyField(source='participant.user.username')
+    situation = serializers.CharField(required=False)
 
-#     class Meta:
-#         model = Submission
-#         fields = ['id', 'situation', 'participant', 'course', 'question']
-#         read_only_fields = ['participant']
+    class Meta:
+        model = Submission
+        fields = '__all__'
 
-#     def get_queryset(self):
-#         user = self.request.user
-#         user_profile = user.user
+    def validate(self, data):
+        user_profile = UserProfile.objects.get(user=self.context['request'].user)
 
-#         if user.is_superuser:
-#             return Submission.objects.all()
+        if 'situation' in data:
+            is_holder = False
+            course_field = data.get('course') or getattr(self.instance, 'course', None)
+            course_id = course_field.id if isinstance(course_field, Course) else course_field
+            if course_id:
+                try:
+                    course = Course.objects.get(id=course_id)
+                    is_holder = user_profile in course.holders.all()
+                except Course.DoesNotExist:
+                    pass
+            if not is_holder:
+                raise serializers.ValidationError({"situation": "Only the course holder can set the situation."})
 
-#         if user_profile.role == UserProfile.ROLE_PARTICIPANT:
-#             return Submission.objects.filter(participant=user_profile)
-
-#         if user_profile.role == UserProfile.ROLE_HOLDER:
-#             return Submission.objects.filter(course__holders=user_profile)
-#         return Submission.objects.none()
-
-
-#     def validate(self, attrs):
-#         request = self.context['request']
-#         user_profile = request.user.user
-
-#         if user_profile.role == UserProfile.ROLE_PARTICIPANT and 'situation' in attrs:
-#             raise serializers.ValidationError({"situation": "Only course holders can set or modify situation."})
-
-#         return attrs
-
-#     def update(self, instance, validated_data):
-#         request = self.context['request']
-#         user_profile = request.user.user
-
-#         if 'situation' in validated_data:
-#             if not instance.course.holders.filter(id=user_profile.id).exists():
-#                 raise serializers.ValidationError({"situation": "Only course holders can update situation."})
-
-#         return super().update(instance, validated_data)
+        return data
