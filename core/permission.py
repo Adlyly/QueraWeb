@@ -29,23 +29,32 @@ class IsOwnerOrCourseHolder(BasePermission):
         is_holder = user_profile in course.holders.all()
 
         if request.method in ['PUT', 'PATCH', 'DELETE']:
-            return is_participant or is_holder
+            return is_participant or is_holder or request.user.is_superuser
         return True
 
 class CanCreateSubmission(BasePermission):
     def has_permission(self, request, view):
-        if request.method != ['POST', 'PUT']:
+        if request.method not in ['POST', 'PUT']:
             return True
 
         user_profile = UserProfile.objects.get(user=request.user)
         course_id = request.data.get('course')
+        question_id = request.data.get('question')
 
-        if not course_id:
+        if not course_id or not question_id:
             return False
-
         try:
             course = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
             return False
 
-        return user_profile in course.participants.all() or user_profile in course.holders.all() or request.user.is_superuser
+        in_course = (user_profile in course.participants.all()) or \
+                    (user_profile in course.holders.all()) or \
+                    request.user.is_superuser
+
+        try:
+            question_in_course = course.questions.filter(id=question_id).exists()
+        except:
+            question_in_course = False
+
+        return in_course and question_in_course

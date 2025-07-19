@@ -99,6 +99,9 @@ class SubmissionViewSet(ModelViewSet):
                 course = Course.objects.get(id=course_id)
             except Course.DoesNotExist:
                 return Submission.objects.none()
+            
+        if self.request.user.is_superuser:
+            return Submission.objects.all()
 
         courses_as_holder = Course.objects.filter(holders=user_profile)
         courses_as_participant = Course.objects.filter(participants=user_profile)
@@ -128,7 +131,7 @@ class SubmissionViewSet(ModelViewSet):
             ):
                 raise PermissionDenied("Invalid course ID.")
 
-        is_holder = user_profile in old_course.holders.all()
+        is_holder = user_profile in old_course.holders.all() or self.request.user.is_superuser
         if not is_holder and 'situation' in self.request.data:
             data = self.request.data.copy()
             data.pop('situation', None)
