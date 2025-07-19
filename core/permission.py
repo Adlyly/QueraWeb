@@ -14,8 +14,8 @@ class IsHolderOrParticipantPermission(BasePermission):
         except:
             return False
         if request.method in SAFE_METHODS:
-            return profile in obj.participants.all() or profile in obj.holders.all()
-        return profile in obj.holders.all()
+            return profile in obj.participants.all() or profile in obj.holders.all() or user.is_superuser
+        return profile in obj.holders.all() or user.is_superuser
 
 
 

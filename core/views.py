@@ -23,13 +23,13 @@ class QuestionViewSet(ModelViewSet):
 
     def perform_update(self, serializer):
         user_profile = get_object_or_404(UserProfile, user=self.request.user)
-        if serializer.instance.author != user_profile:
+        if serializer.instance.author != user_profile and self.request.user.is_superuser == 0:
             raise PermissionDenied("You can only update your own questions.")
         serializer.save()
 
     def perform_destroy(self, instance):
         user_profile = get_object_or_404(UserProfile, user=self.request.user)
-        if instance.author != user_profile:
+        if instance.author != user_profile and self.request.user.is_superuser == 0:
             raise PermissionDenied("You can only delete your own questions.")
         instance.delete()
 
@@ -38,8 +38,12 @@ class CourseViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+
         if not user.is_authenticated:
             return Course.objects.none()
+        
+        if user.is_superuser or user.is_staff:
+            return Course.objects.all()
 
         try:
             profile = UserProfile.objects.get(user=user)
@@ -71,13 +75,13 @@ class TestCaseViewSet(ModelViewSet):
 
     def perform_update(self, serializer):
         user_profile = get_object_or_404(UserProfile, user=self.request.user)
-        if serializer.instance.author != user_profile:
+        if serializer.instance.author != user_profile and self.request.user.is_superuser == 0:
             raise PermissionDenied("You can only update your own testcase.")
         serializer.save()
 
     def perform_destroy(self, instance):
         user_profile = get_object_or_404(UserProfile, user=self.request.user)
-        if instance.author != user_profile:
+        if instance.author != user_profile and self.request.user.is_superuser == 0:
             raise PermissionDenied("You can only delete your own testcase.")
         instance.delete()
 

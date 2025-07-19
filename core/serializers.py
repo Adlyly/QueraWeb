@@ -55,7 +55,7 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = '__all__'
+        fields = ['title', 'start_date', 'end_date', 'description', 'participants', 'holders', 'questions']
 
 class TestCaseSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
