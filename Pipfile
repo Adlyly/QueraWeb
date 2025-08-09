@@ -4,13 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
-djangorestframework = "*"
 djangorestframework-simplejwt = "*"
 django-debug-toolbar = "*"
 djoser = "*"
+django = "*"
+djangorestframework = "*"
+mysqlclient = "*"
+
 
 [dev-packages]
 
 [requires]
-python_version = "3.13"
+python_version = "3.10"

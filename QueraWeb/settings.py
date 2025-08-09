@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from datetime import timedelta
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,7 +43,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'djoser',
     'core',
-    'userprofile',
+    'userprofile.apps.UserprofileConfig',
 ]
 
 MIDDLEWARE = [
@@ -87,8 +88,15 @@ WSGI_APPLICATION = 'QueraWeb.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DATABASE_NAME', 'queraweb'),
+        'USER': os.getenv('DATABASE_USER', 'yalda'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'Yalda*1383'),
+        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DATABASE_PORT', '3306'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
